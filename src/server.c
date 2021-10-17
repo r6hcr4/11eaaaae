@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
     pthread_t nstid;
     pthread_create(&nstid, NULL, netserver, NULL);
 
-    LOG("TCP server group1 started on port %d", port);
+    LOG("TCP server group-1 started on port %d", port);
     for(;;) {
         char cmd[1024];
         printf("%% "); fflush(stdout);
