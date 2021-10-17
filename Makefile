@@ -5,4 +5,4 @@ java:
 		cd javaclient && make
 
 clean:
-		rm -f dist/*
+		rm -f dist/* javaclient/dist/*

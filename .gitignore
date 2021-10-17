@@ -1,2 +1,3 @@
 /dist/**
+/javaclient/dist/**
 /server.log
