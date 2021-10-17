@@ -33,6 +33,8 @@ void *netserver(void *arg) {
         struct sockaddr_in clientaddr;
         unsigned int sockaddr_size = sizeof(clientaddr);
         int csock = accept(sock, (struct sockaddr *) &clientaddr, &sockaddr_size);
+        uint8_t *ip = (uint8_t *) &clientaddr.sin_addr;
+        LOG("Connection from %hu.%hu.%hu.%hu established", ip[0], ip[1], ip[2], ip[3]);
     }
 }
 
@@ -49,12 +51,13 @@ int main(int argc, char* argv[]) {
     pthread_t nstid;
     pthread_create(&nstid, NULL, netserver, NULL);
 
-    LOG("TCP server g2-it works started on port %d", port);
+    LOG("TCP server g2 on port %d", port);
     for(;;) {
         char cmd[1024];
         printf("%% "); fflush(stdout);
         if(!fgets(cmd, sizeof(cmd), stdin)) break;
     }
+    LOG("TCP server g2 finished");
 
     return 0;
 }
