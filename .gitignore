@@ -1,3 +1,5 @@
 /dist/**
+!/dist/.gitkeep
 /javaclient/dist/**
+!/javaclient/dist/.gitkeep
 /server.log

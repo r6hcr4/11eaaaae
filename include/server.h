@@ -3,4 +3,6 @@
 
 #define LOGFNAME "server.log"
 
+extern int nthreads;
+
 #endif

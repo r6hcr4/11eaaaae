@@ -13,8 +13,10 @@
 
 #include "server.h"
 #include "server_lib.h"
+#include "server_client.h"
 
 uint16_t port;
+int nthreads = 0;
 
 void *netserver(void *arg) {
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP), opt = 1;
@@ -32,7 +34,11 @@ void *netserver(void *arg) {
     for(;;) {
         struct sockaddr_in clientaddr;
         unsigned int sockaddr_size = sizeof(clientaddr);
-        int csock = accept(sock, (struct sockaddr *) &clientaddr, &sockaddr_size);
+        struct cthread_arg *arg = (struct cthread_arg *) calloc(1, sizeof(struct cthread_arg));
+        arg->sock = accept(sock, (struct sockaddr *) &clientaddr, &sockaddr_size);
+        arg->sin_addr = clientaddr.sin_addr;
+        pthread_t ctid;
+        pthread_create(&ctid, NULL, cthread, arg);
     }
 }
 
@@ -51,10 +57,23 @@ int main(int argc, char* argv[]) {
 
     LOG("TCP server started on port %d", port);
     for(;;) {
-        char cmd[1024];
+        char cmdline[1024], cmd[1024];
+        int n, arg1;
         printf("%% "); fflush(stdout);
-        if(!fgets(cmd, sizeof(cmd), stdin)) break;
+        if(!fgets(cmdline, sizeof(cmdline), stdin)) break;
+        n = sscanf(cmdline, "%s %d", cmd, arg1);
+        if(n < 1) continue;
+        if(!strcmp(cmd, "exit")) {
+            break;
+        } else if(!strcmp(cmd, "status")) {
+            printf("process pid     %d\n", getpid());
+            printf("listening port  %d\n", port);
+            printf("working threads %d\n", nthreads);
+        } else {
+            fprintf(stderr, "command %s not recognized\n", cmd);
+        }
     }
+    LOG("TCP server stopped");
 
     return 0;
 }
