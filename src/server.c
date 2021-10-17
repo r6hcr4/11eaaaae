@@ -26,8 +26,8 @@ void *netserver(void *arg) {
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     if(bind(sock, (struct sockaddr *) &addr, sizeof(addr))) {
-        LOG("bind to port %hd failed", port);
-        fprintf(stderr, "\ncannot start, check log\n");
+        LOG("Bind to port %hd failed", port);
+        fprintf(stderr, "\nCannot start, check log\n");
         exit(2);
     }
     listen(sock, 5);
@@ -36,9 +36,14 @@ void *netserver(void *arg) {
         unsigned int sockaddr_size = sizeof(clientaddr);
         struct cthread_arg *arg = (struct cthread_arg *) calloc(1, sizeof(struct cthread_arg));
         arg->sock = accept(sock, (struct sockaddr *) &clientaddr, &sockaddr_size);
-        arg->sin_addr = clientaddr.sin_addr;
-        pthread_t ctid;
-        pthread_create(&ctid, NULL, cthread, arg);
+        if(arg->sock >= 0) {
+            arg->sin_addr = clientaddr.sin_addr;
+            pthread_t ctid;
+            pthread_create(&ctid, NULL, cthread, arg);
+        } else {
+            LOG("Error on accepting new connection", port);
+            free(arg);
+        }
     }
 }
 
@@ -46,7 +51,7 @@ int main(int argc, char* argv[]) {
     _log = fopen(LOGFNAME, "a");
     if(!_log) {
         _log = stderr;
-        LOG("unable to open log file %s", LOGFNAME);
+        LOG("Unable to open log file %s", LOGFNAME);
     }
     if(argc < 2 || (port = atoi(argv[1])) <= 0) {
         fprintf(stderr, "use %s port\n", argv[0]);
