@@ -14,11 +14,12 @@ void *cthread(void *arg) {
     LOG("Connection %d from %hd.%hd.%hd.%hd established", carg->sock, ip[0], ip[1], ip[2], ip[3]);
 
     // konwersacja z klientem
-    FILE *input = fdopen(carg->sock, "r");
+    FILE *input = fdopen(carg->sock, "r"), *output = fdopen(carg->sock, "w");
     char line[1024];
+    if(!input || !output) printf("xxx");
     for(;;) {
         fgets(line, 1024, input);
-        printf("--- %s\n", line);
+        fputs(line, output); fflush(output);
     }
     // koniec konwersacji
 
