@@ -16,8 +16,11 @@ void *cthread(void *arg) {
     // konwersacja z klientem
     FILE *input = fdopen(carg->sock, "r"), *output = fdopen(carg->sock, "w");
     char line[1024];
+    int x, n;
     for(;;) {
         fgets(line, sizeof(line), input);
+        n = sscanf(line, "%d", &x);
+        if(n == 0) break;
         fputs(line, output); fflush(output);
     }
     // koniec konwersacji
