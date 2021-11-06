@@ -17,8 +17,10 @@
 
 uint16_t port;
 int nthreads = 0;
+struct cthread_arg* clients[MAXCLIENTS] = { NULL };
 
-void *netserver(void *arg) {
+// kod serwera nasłuchowego TCP
+void *tcpserver(void *arg) {
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP), opt = 1;
     setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     struct sockaddr_in addr;
@@ -57,10 +59,13 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "use %s port\n", argv[0]);
         return 1;
     }
-    pthread_t nstid;
-    pthread_create(&nstid, NULL, netserver, NULL);
 
+    // start wątku serwera nasłuchowego TCP
+    pthread_t nstid;
+    pthread_create(&nstid, NULL, tcpserver, NULL);
     LOG("TCP server started on port %d", port);
+
+    // konsola sterowania serwerem
     for(;;) {
         char cmdline[1024], cmd[1024];
         int n, arg1;
@@ -74,11 +79,19 @@ int main(int argc, char* argv[]) {
             printf("process pid     %d\n", getpid());
             printf("listening port  %d\n", port);
             printf("working threads %d\n", nthreads);
+        } else if(!strcmp(cmd, "lc")) {
+            int i;
+            for(i = 0; i < MAXCLIENTS; i++) {
+                if(clients[i]) {
+                    uint8_t *ip = (uint8_t *) &clients[i]->sin_addr;
+                    printf("%d %d.%d.%d.%d\n", clients[i]->sock, ip[0], ip[1], ip[2], ip[3]);
+                }
+            }
         } else {
             fprintf(stderr, "command %s not recognized\n", cmd);
         }
     }
-    LOG("TCP server stopped");
+    LOG("Server stopped");
 
     return 0;
 }

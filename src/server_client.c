@@ -9,13 +9,19 @@
 void *cthread(void *arg) {
     nthreads++;
     struct cthread_arg *carg = (struct cthread_arg *) arg;
+    clients[carg->sock] = carg;
     uint8_t *ip = (uint8_t *) &carg->sin_addr;
     LOG("Connection %d from %hd.%hd.%hd.%hd established", carg->sock, ip[0], ip[1], ip[2], ip[3]);
+
+    // konwersacja z klientem
     write(carg->sock, "Hello\r\n", 7);
-    sleep(10);
+    sleep(60);
     write(carg->sock, "Bye\r\n", 5);
+    // koniec konwersacji
+
     close(carg->sock);
     LOG("Connection %d closed", carg->sock);
+    clients[carg->sock] = NULL;
     free(carg);
     nthreads--;
 }
