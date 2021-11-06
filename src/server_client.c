@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 #include <netinet/in.h>
 
 #include "server.h"
@@ -15,11 +16,14 @@ void *cthread(void *arg) {
 
     // konwersacja z klientem
     FILE *input = fdopen(carg->sock, "r"), *output = fdopen(carg->sock, "w");
-    char line[1024];
-    if(!input || !output) printf("xxx");
+    char line[1024], cmd[1024];
+    int param;
     for(;;) {
-        fgets(line, 1024, input);
-        fputs(line, output); fflush(output);
+        if(!fgets(line, 1024, input)) break;
+        int n = sscanf(line, "%s %d", cmd, &param);
+        if(n < 2) param = 0;
+        if(!strcmp(cmd, "exit")) break;
+        fputs("OK\r\n", output); fflush(output);
     }
     // koniec konwersacji
 
