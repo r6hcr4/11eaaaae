@@ -17,13 +17,19 @@ void *cthread(void *arg) {
     // konwersacja z klientem
     FILE *input = fdopen(carg->sock, "r"), *output = fdopen(carg->sock, "w");
     char line[1024], cmd[1024];
-    int param;
+    int param, sum = 0;
     for(;;) {
         if(!fgets(line, 1024, input)) break;
         int n = sscanf(line, "%s %d", cmd, &param);
         if(n < 2) param = 0;
         if(!strcmp(cmd, "exit")) break;
-        fputs("OK\r\n", output); fflush(output);
+        if(!strcmp(cmd, "add")) {
+            sum += param;
+            fprintf(output, "%d\r\n", sum);
+        } else {
+            fputs("OK\r\n", output);
+        }
+        fflush(output);
     }
     // koniec konwersacji
 
