@@ -18,7 +18,7 @@ void *cthread(void *arg) {
     FILE *input = fdopen(carg->sock, "r"), *output = fdopen(carg->sock, "w");
     setbuf(output, NULL);
     int narg, state = 0; // 0 = wprowadzenie poleceń
-    char line[1024], cmd[1024], arg1[1024];
+    char line[1024], cmd[1024], arg1[1024], sendTo[1024];
     for(;;) {
         if(!fgets(line, sizeof(line), input)) break;
         if(!state) {
@@ -44,8 +44,31 @@ void *cthread(void *arg) {
                         fprintf(output, "%s\r\n", clients[i]->login);
                     }
                 }
+            } else if(!strcmp(cmd, "send")) {
+                if(narg > 1) {
+                    strcpy(sendTo, arg1);
+                    state = 1;
+                    fprintf(output, "Now type a message for %s, dot alone for end\r\n", sendTo);
+                } else {
+                    fputs("Use send <user>\r\n", output);
+                }
             } else {
                 fprintf(output, "Unknown command %s\r\n", cmd);
+            }
+        } else { // stan: wysyłanie danych
+            if(line[0] == '.' && (line[1] == '\r' || line[1] == '\n')) {
+                state = 0;
+                fputs("Back to command mode\r\n", output);
+            } else {
+                // routing wiadomości
+                int i;
+                for(i = 0; i < MAXCLIENTS; i++) {
+                    if(clients[i] && !strcmp(sendTo, clients[i]->login)) {
+                        FILE *recipientOutput = fdopen(clients[i]->sock, "w");
+                        setbuf(recipientOutput, NULL);
+                        fprintf(recipientOutput, "%s: %s", carg->login ? carg->login : "not-logged-in", line);
+                    }
+                }
             }
         }
     }
