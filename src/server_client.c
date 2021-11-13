@@ -16,6 +16,7 @@ void *cthread(void *arg) {
 
     // konwersacja z klientem
     FILE *input = fdopen(carg->sock, "r"), *output = fdopen(carg->sock, "w");
+    setbuf(output, NULL);
     int narg, state = 0; // 0 = wprowadzenie poleceń
     char line[1024], cmd[1024], arg1[1024];
     for(;;) {
@@ -28,16 +29,23 @@ void *cthread(void *arg) {
                     carg->login = strdup(arg1);
                     LOG("Connection %d: user %s logged in", carg->sock, carg->login);
                 }
-                fprintf(output, "You are %s\r\n", carg->login ? carg->login : "not-logged-in"); fflush(output);
+                fprintf(output, "You are %s\r\n", carg->login ? carg->login : "not-logged-in");
             } else if(!strcmp(cmd, "logout")) {
-                    if(carg->login) {
-                        LOG("Connection %d: user %s logged out", carg->sock, carg->login);
-                        free(carg->login);
-                        carg->login = NULL;
+                if(carg->login) {
+                    LOG("Connection %d: user %s logged out", carg->sock, carg->login);
+                    free(carg->login);
+                    carg->login = NULL;
+                }
+                fputs("You are not-logged-in\r\n", output);
+            } else if(!strcmp(cmd, "list")) {
+                int i;
+                for(i = 0; i < MAXCLIENTS; i++) {
+                    if(clients[i] && clients[i]->login) {
+                        fprintf(output, "%s\r\n", clients[i]->login);
                     }
-                    fputs("You are not-logged-in\r\n", output); fflush(output);
+                }
             } else {
-                fprintf(output, "Unknown command %s\r\n", cmd); fflush(output);
+                fprintf(output, "Unknown command %s\r\n", cmd);
             }
         }
     }
