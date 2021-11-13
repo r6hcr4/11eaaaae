@@ -67,6 +67,14 @@ void *cthread(void *arg) {
                 sendTo[0] = 0;
             } else {
                 // roześlij linię do wszystkich zalogowanych jako sendTo
+                int i;
+                for(i = 0; i < MAXCLIENTS; i++) {
+                    if(clients[i] && clients[i]->login && !strcmp(clients[i]->login, sendTo)) {
+                        FILE *recipientOutput = fdopen(clients[i]->sock, "w");
+                        setbuf(recipientOutput, NULL);
+                        fprintf(recipientOutput, "%s: %s", carg->login, line);
+                    }
+                }
             }
         }
     }
