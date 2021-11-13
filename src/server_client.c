@@ -38,7 +38,15 @@ void *cthread(void *arg) {
             LOG("Connection %d: user %s logged out", carg->sock, carg->login);
             free(carg->login);
             carg->login = NULL;
-        } else if(!strcmp(cmd, "send")) {
+        } else if(!strcmp(cmd, "list")) {
+            // lista zalogowanych
+            int i;
+            for(i = 0; i < MAXCLIENTS; i++) {
+                if(clients[i] && clients[i]->login) {
+                    fprintf(output, "%s%s\n", clients[i]->login, i == carg->sock ? " (me)" : "");
+                }
+            }
+        }else if(!strcmp(cmd, "send")) {
             // wysyłanie wiadomości
 
         } else {
