@@ -81,11 +81,11 @@ int main(int argc, char* argv[]) {
             printf("working threads %d\n", nthreads);
         } else if(!strcmp(cmd, "list")) {
             int i;
-            printf("desc\tip\n");
+            printf("desc\tip\t\tlogin\n");
             for(i = 0; i < MAXCLIENTS; i++) {
                 if(clients[i]) {
                     uint8_t *ip = (uint8_t *) &clients[i]->sin_addr;
-                    printf("%d\t%d.%d.%d.%d\n", clients[i]->sock, ip[0], ip[1], ip[2], ip[3]);
+                    printf("%d\t%d.%d.%d.%d\t%s\n", clients[i]->sock, ip[0], ip[1], ip[2], ip[3], clients[i]->login ? clients[i]->login : "not-logged-in");
                 }
             }
         } else {

@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 #include <netinet/in.h>
 
 #include "server.h"
@@ -15,13 +16,34 @@ void *cthread(void *arg) {
 
     // konwersacja z klientem
     FILE *input = fdopen(carg->sock, "r"), *output = fdopen(carg->sock, "w");
-    char line[1024];
+    int narg, state = 0; // 0 = wprowadzenie poleceń
+    char line[1024], cmd[1024], arg1[1024];
     for(;;) {
-        fgets(line, sizeof(line), input);
-        fputs(line, output); fflush(output);
+        if(!fgets(line, sizeof(line), input)) break;
+        if(!state) {
+            narg = sscanf(line, "%s %s", cmd, arg1);
+            if(!strcmp(cmd, "login")) {
+                if(narg > 1) {
+                    if(carg->login) free(carg->login);
+                    carg->login = strdup(arg1);
+                    LOG("Connection %d: user %s logged in", carg->sock, carg->login);
+                }
+                fprintf(output, "You are %s\r\n", carg->login ? carg->login : "not-logged-in"); fflush(output);
+            } else if(!strcmp(cmd, "logout")) {
+                    if(carg->login) {
+                        LOG("Connection %d: user %s logged out", carg->sock, carg->login);
+                        free(carg->login);
+                        carg->login = NULL;
+                    }
+                    fputs("You are not-logged-in\r\n", output); fflush(output);
+            } else {
+                fprintf(output, "Unknown command %s\r\n", cmd); fflush(output);
+            }
+        }
     }
     // koniec konwersacji
 
+    if(carg->login) free(carg->login);
     close(carg->sock);
     LOG("Connection %d closed", carg->sock);
     clients[carg->sock] = NULL;
