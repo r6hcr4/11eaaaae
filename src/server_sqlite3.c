@@ -49,3 +49,16 @@ int getUser(const char *login) {
     sqlite3_bind_text(stmt, 1, login, strlen(login), NULL);
     return sqlite3_step(stmt) != SQLITE_ROW ? 0 : sqlite3_column_int(stmt, 0);
 }
+
+int getLogin(int n, char *login) {
+    sqlite3_stmt *stmt;
+    sqlite3_prepare_v2(db, "SELECT login FROM users WHERE id = ?", -1, &stmt, NULL);
+    sqlite3_bind_int(stmt, 1, n);
+    // uwaga na środowisko wielowątkowe!
+    if(sqlite3_step(stmt) == SQLITE_ROW) {
+        strcpy(login, sqlite3_column_text(stmt, 0));
+        return n;
+    }
+    strcpy(login, "(not-logged-in)");
+    return 0;
+}

@@ -6,6 +6,7 @@
 #include "server.h"
 #include "server_lib.h"
 #include "server_client.h"
+#include "server_sqlite3.h"
 
 void *cthread(void *arg) {
     nthreads++;
@@ -17,44 +18,53 @@ void *cthread(void *arg) {
     // konwersacja z klientem
     FILE *input = fdopen(carg->sock, "r"), *output = fdopen(carg->sock, "w");
     setbuf(output, NULL);
-    char line[1024], cmd[1024], arg1[1024], sendTo[1024] = "";
+    char line[1024], cmd[1024], arg1[1024], arg2[1024];
+    int sendTo = 0;
     for(;;) {
         if(!fgets(line, sizeof(line), input)) break;
-        if(!sendTo[0]) {
+        if(!sendTo) {
             // tryb komend
-            int narg = sscanf(line, "%s %s", cmd, arg1);
+            int narg = sscanf(line, "%s %s %s", cmd, arg1, arg2);
             if(!strcmp(cmd, "login")) {
                 // logowanie
-                if(narg > 1) {
-                    // użytkownik podał login
-                    if(carg->login) {
-                        LOG("Connection %d: user %s logged out", carg->sock, carg->login);
-                        free(carg->login);
+                if(narg > 2) {
+                    // użytkownik podał login i hasło
+                    int user = checkUser(arg1, arg2);
+                    if(!user) {
+                        LOG("Connection %d: user %s authentication failed", carg->sock, arg1);
+                        fprintf(output, "Login failed\r\n");
+                    } else {
+                        carg->user = user;
+                        LOG("Connection %d: user %s logged in", carg->sock, arg1);
+                        fprintf(output, "Welcome on board %s\r\n", arg1);
                     }
-                    carg->login = strdup(arg1);
-                    LOG("Connection %d: user %s logged in", carg->sock, carg->login);
+                } else {
+                    fprintf(output, "Use: login <user> <pass>\r\n");
                 }
-                fprintf(output, "You are %s\r\n", carg->login);
-            } else if(!strcmp(cmd, "logout") && carg->login) {
+            } else if(!strcmp(cmd, "logout") && carg->user) {
                 // wylogowywanie
-                LOG("Connection %d: user %s logged out", carg->sock, carg->login);
-                free(carg->login);
-                carg->login = NULL;
+                carg->user = 0;
             } else if(!strcmp(cmd, "list")) {
                 // lista zalogowanych
                 int i;
                 for(i = 0; i < MAXCLIENTS; i++) {
-                    if(clients[i] && clients[i]->login) {
-                        fprintf(output, "%s%s\n", clients[i]->login, i == carg->sock ? " (me)" : "");
+                    if(clients[i] && clients[i]->user) {
+                        char login[1024];
+                        getLogin(clients[i]->user, login);
+                        fprintf(output, "%s%s\n", login, i == carg->sock ? " (me)" : "");
                     }
                 }
             } else if(!strcmp(cmd, "send")) {
                 // wysyłanie wiadomości
                 if(narg > 1) {
-                    strcpy(sendTo, arg1);
-                    fprintf(output, "Enter messages for %s, dot alone to finish\r\n", sendTo);
+                    sendTo = getUser(arg1);
+                    if(sendTo) {
+                        fprintf(output, "Enter messages for %s, dot alone to finish\r\n", arg1);
+                    } else {
+                        fprintf(output, "No such user %s\r\n", arg1);
+                    }
                 } else {
-                    fprintf(output, "Command send requires a parameter\r\n");
+                    fprintf(output, "Use: send <recipient>\r\n");
                 }
             } else {
                 fprintf(output, "Unrecognized command %s\r\n", cmd);
@@ -63,16 +73,16 @@ void *cthread(void *arg) {
             // tryb wiadomości
             if(line[0] == '.' && (line[1] == '\r' || line[1] == '\n')) {
                 // przejdź do trybu komend
-                fprintf(output, "End of messages for %s\r\n", sendTo);
-                sendTo[0] = 0;
+                fprintf(output, "Back to command mode\r\n");
+                sendTo = 0;
             } else {
                 // roześlij linię do wszystkich zalogowanych jako sendTo
                 int i;
                 for(i = 0; i < MAXCLIENTS; i++) {
-                    if(clients[i] && clients[i]->login && !strcmp(clients[i]->login, sendTo)) {
+                    if(clients[i] && clients[i]->user && clients[i]->user == sendTo) {
                         FILE *recipientOutput = fdopen(clients[i]->sock, "w");
                         setbuf(recipientOutput, NULL);
-                        fprintf(recipientOutput, "%s: %s", carg->login, line);
+                        fprintf(recipientOutput, "%s", line);
                     }
                 }
             }
@@ -80,7 +90,6 @@ void *cthread(void *arg) {
     }
     // koniec konwersacji
 
-    if(carg->login) free(carg->login);
     close(carg->sock);
     LOG("Connection %d closed", carg->sock);
     clients[carg->sock] = NULL;

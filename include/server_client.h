@@ -4,7 +4,7 @@
 struct cthread_arg {
     struct in_addr sin_addr;
     int sock;
-    char *login;
+    int user;
 };
 
 void *cthread(void *arg);

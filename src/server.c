@@ -92,7 +92,9 @@ int main(int argc, char* argv[]) {
             for(i = 0; i < MAXCLIENTS; i++) {
                 if(clients[i]) {
                     uint8_t *ip = (uint8_t *) &clients[i]->sin_addr;
-                    printf("%d\t%d.%d.%d.%d\t%s\n", clients[i]->sock, ip[0], ip[1], ip[2], ip[3], clients[i]->login);
+                    char login[1024];
+                    getLogin(clients[i]->user, login);
+                    printf("%d\t%d.%d.%d.%d\t%s\n", clients[i]->sock, ip[0], ip[1], ip[2], ip[3], login);
                 }
             }
         } else {
