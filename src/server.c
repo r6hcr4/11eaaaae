@@ -14,6 +14,7 @@
 #include "server.h"
 #include "server_lib.h"
 #include "server_client.h"
+#include "server_sqlite3.h"
 
 uint16_t port;
 int nthreads = 0;
@@ -57,6 +58,12 @@ int main(int argc, char* argv[]) {
     }
     if(argc < 2 || (port = atoi(argv[1])) <= 0) {
         fprintf(stderr, "use %s port\n", argv[0]);
+        return 1;
+    }
+
+    // podłączenie bazy danych
+    if(!dbconnect()) {
+        fprintf(stderr, "connection to database failed\n", argv[0]);
         return 1;
     }
 

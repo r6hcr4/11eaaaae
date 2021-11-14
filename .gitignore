@@ -3,3 +3,4 @@
 /javaclient/dist/**
 !/javaclient/dist/.gitkeep
 /server.log
+db/data.sqlite3
