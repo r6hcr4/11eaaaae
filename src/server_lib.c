@@ -11,10 +11,10 @@ void now(char *buf, size_t len) {
 }
 
 FILE *_log;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void LOG(char *format, ...) {
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&log_mutex);
     char buf[40];
     now(buf, sizeof(buf));
     fprintf(_log, "%s ", buf);
@@ -24,5 +24,5 @@ void LOG(char *format, ...) {
     va_end(args);
     fprintf(_log, "\n");
     fflush(_log);
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&log_mutex);
 }

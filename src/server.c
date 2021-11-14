@@ -61,9 +61,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    LOG("--- INITIALIZATION ---");
+
     // podłączenie bazy danych
     if(!dbconnect()) {
-        fprintf(stderr, "connection to database failed\n", argv[0]);
+        fprintf(stderr, "connection to database failed, cannot continue\n", argv[0]);
         return 1;
     }
 
@@ -93,7 +95,7 @@ int main(int argc, char* argv[]) {
                 if(clients[i]) {
                     uint8_t *ip = (uint8_t *) &clients[i]->sin_addr;
                     char login[1024];
-                    getLogin(clients[i]->user, login);
+                    getLogin(clients[i]->user, login, sizeof(login));
                     printf("%d\t%d.%d.%d.%d\t%s\n", clients[i]->sock, ip[0], ip[1], ip[2], ip[3], login);
                 }
             }

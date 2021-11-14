@@ -6,6 +6,6 @@ void dbclose();
 
 int checkUser(const char *login, const char *password);
 int getUser(const char *login);
-int getLogin(int n, char *login);
+int getLogin(int n, char *login, size_t maxsize);
 
 #endif
