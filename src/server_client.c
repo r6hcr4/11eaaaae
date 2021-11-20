@@ -97,6 +97,21 @@ void *cthread(void *arg) {
                 } else {
                     client_printf(0, output, "Use: send <recipient>\r\n");
                 }
+            } else if(!strcmp(cmd, "register")) {
+                // rejestracja
+                if(narg > 2) {
+                    // użytkownik podał login i hasło
+                    int user = registerUser(arg1, arg2);
+                    if(!user) {
+                        LOG("Connection %d: user %s was not created", carg->sock, arg1);
+                        client_printf(0, output, "User not created\r\n");
+                    } else {
+                        LOG("Connection %d: user %s was created", carg->sock, arg1);
+                        client_printf(0, output, "User %s created\r\n", arg1);
+                    }
+                } else {
+                    client_printf(0, output, "Use: register <user> <pass>\r\n");
+                }
             } else {
                 client_printf(0, output, "Unrecognized command %s\r\n", cmd);
             }

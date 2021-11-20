@@ -50,6 +50,10 @@ void *tcpserver(void *arg) {
     }
 }
 
+void printUser(int id, const char *login) {
+    printf("%d\t%s\n", id, login);
+}
+
 int main(int argc, char* argv[]) {
     _log = fopen(LOGFNAME, "a");
     if(!_log) {
@@ -99,6 +103,10 @@ int main(int argc, char* argv[]) {
                     printf("%d\t%d.%d.%d.%d\t%s\n", clients[i]->sock, ip[0], ip[1], ip[2], ip[3], login);
                 }
             }
+        } else if(!strcmp(cmd, "users")) {
+            int i;
+            printf("id\tlogin\n");
+            forAllUsers(printUser);
         } else {
             fprintf(stderr, "command %s not recognized\n", cmd);
         }
