@@ -112,6 +112,8 @@ void *cthread(void *arg) {
                 } else {
                     client_printf(0, output, "Use: register <user> <pass>\r\n");
                 }
+            } else if(!strcmp(cmd, "history")) { // g1c
+                // historia
             } else {
                 client_printf(0, output, "Unrecognized command %s\r\n", cmd);
             }
