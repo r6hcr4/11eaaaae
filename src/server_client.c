@@ -122,6 +122,8 @@ void *cthread(void *arg) {
                 client_printf(0, output, "Back to command mode\r\n");
                 sendTo = 0;
             } else {
+                // zapisz wiadomość w bazie (czas aktualny, nadawca, odbiorca, treść)
+                saveMessage(carg->user, sendTo, line);
                 // roześlij linię do wszystkich zalogowanych jako sendTo
                 int i;
                 for(i = 0; i < MAXCLIENTS; i++) {

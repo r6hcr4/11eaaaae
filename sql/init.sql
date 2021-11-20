@@ -4,3 +4,6 @@ create unique index u_login on users (login);
 insert into users (login,password) values ('adam','adam');
 insert into users (login,password) values ('bozena','bozena');
 insert into users (login,password) values ('celina','celina');
+
+drop table if exists messages;
+create table messages (id integer primary key autoincrement, date integer, sender integer, recipient integer, data text);

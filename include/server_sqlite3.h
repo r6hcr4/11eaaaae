@@ -9,5 +9,6 @@ int getUser(const char *login);
 int getLogin(int n, char *login, size_t maxsize);
 int registerUser(const char *login, const char *password);
 void forAllUsers(void (*action)(int uid, const char *login));
+void saveMessage(int sender, int recipient, const char *line);
 
 #endif

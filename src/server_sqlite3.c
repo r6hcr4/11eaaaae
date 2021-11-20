@@ -110,3 +110,17 @@ void forAllUsers(void (*action)(int uid, const char *login)) {
     }
     pthread_mutex_unlock(&db_mutex_s);
 }
+
+// zapisz wiadomość
+void saveMessage(int sender, int recipient, const char *line) {
+    pthread_mutex_lock(&db_mutex_a);
+    int date = time(NULL);
+    sqlite3_stmt *stmt;
+    sqlite3_prepare_v2(db, "INSERT INTO messages (date, sender, recipient, data) VALUES (?, ?, ?, ?)", -1, &stmt, NULL);
+    sqlite3_bind_int(stmt, 1, date);
+    sqlite3_bind_int(stmt, 2, sender);
+    sqlite3_bind_int(stmt, 3, recipient);
+    sqlite3_bind_text(stmt, 4, line, strlen(line), NULL);
+    sqlite3_step(stmt);
+    pthread_mutex_unlock(&db_mutex_a);
+}
