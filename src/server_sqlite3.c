@@ -126,7 +126,7 @@ void saveMessage(int sender, int recipient, const char *line) {
 }
 
 // zrób "action" dla wszystkich wiadomość w których zaangażowany jest użytkownik uid
-void forAllMessagesPerUser(int uid, void (*action)(int sent, const char *sender, const char *recipient, const char *line)) {
+void forAllMessagesPerUser(int uid, FILE *output, void (*action)(FILE *output, int sent, const char *sender, const char *recipient, const char *line)) {
     pthread_mutex_lock(&db_mutex_s);
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2(db, "select sent,u1.login as sender,u2.login as recipient,line from messages left join users u1 on sender=u1.id left join users u2 on recipient=u2.id where sender=? or recipient=? order by sent desc", -1, &stmt, NULL);
@@ -138,7 +138,7 @@ void forAllMessagesPerUser(int uid, void (*action)(int sent, const char *sender,
         strncpy(sender, sqlite3_column_text(stmt, 1), sizeof(sender));
         strncpy(recipient, sqlite3_column_text(stmt, 2), sizeof(recipient));
         strncpy(line, sqlite3_column_text(stmt, 3), sizeof(line));
-        action(sent, sender, recipient, line);
+        action(output, sent, sender, recipient, line);
     }
     pthread_mutex_unlock(&db_mutex_s);
 }

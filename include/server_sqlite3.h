@@ -10,6 +10,6 @@ int getLogin(int n, char *login, size_t maxsize);
 int registerUser(const char *login, const char *password);
 void forAllUsers(void (*action)(int uid, const char *login));
 void saveMessage(int sender, int recipient, const char *line);
-void forAllMessagesPerUser(int uid, void (*action)(int sent, const char *sender, const char *recipient, const char *line));
+void forAllMessagesPerUser(int uid, FILE *output, void (*action)(FILE *output, int sent, const char *sender, const char *recipient, const char *line));
 
 #endif
