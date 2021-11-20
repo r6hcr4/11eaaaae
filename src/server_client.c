@@ -112,6 +112,9 @@ void *cthread(void *arg) {
                 } else {
                     client_printf(0, output, "Use: register <user> <pass>\r\n");
                 }
+            } else if(!strcmp(cmd, "history")) {
+                // historia
+                // g2c - forAllMessagesPerUser(...)
             } else {
                 client_printf(0, output, "Unrecognized command %s\r\n", cmd);
             }
