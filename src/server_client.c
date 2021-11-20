@@ -39,6 +39,14 @@ static void logout(struct cthread_arg *carg, FILE *output) {
     }
 }
 
+static FILE *self_output;
+void client_sendHistory(int sent, const char *sender, const char *recipient, const char *line) {
+    char date[100];
+    const time_t stamp = sent;
+    strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", localtime(&stamp));
+    client_printf(0, self_output, "%s\t%s->%s\t%s", date, sender, recipient, line);
+}
+
 void *cthread(void *arg) {
     nthreads++;
     struct cthread_arg *carg = (struct cthread_arg *) arg;
@@ -114,6 +122,8 @@ void *cthread(void *arg) {
                 }
             } else if(!strcmp(cmd, "history")) { // g1c
                 // historia
+                self_output = output;
+                forAllMessagesPerUser(carg->user, client_sendHistory);
             } else {
                 client_printf(0, output, "Unrecognized command %s\r\n", cmd);
             }

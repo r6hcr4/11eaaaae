@@ -101,7 +101,6 @@ void forAllUsers(void (*action)(int uid, const char *login)) {
     pthread_mutex_lock(&db_mutex_s);
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2(db, "SELECT id,login FROM users", -1, &stmt, NULL);
-    int res = 0;
     static char login[1024];
     while(sqlite3_step(stmt) == SQLITE_ROW) {
         int uid = sqlite3_column_int(stmt, 0);
@@ -116,11 +115,33 @@ void saveMessage(int sender, int recipient, const char *line) {
     pthread_mutex_lock(&db_mutex_a);
     int date = time(NULL);
     sqlite3_stmt *stmt;
-    sqlite3_prepare_v2(db, "INSERT INTO messages (date, sender, recipient, data) VALUES (?, ?, ?, ?)", -1, &stmt, NULL);
+    sqlite3_prepare_v2(db, "INSERT INTO messages (sent,sender,recipient,line) VALUES (?,?,?,?)", -1, &stmt, NULL);
     sqlite3_bind_int(stmt, 1, date);
     sqlite3_bind_int(stmt, 2, sender);
     sqlite3_bind_int(stmt, 3, recipient);
     sqlite3_bind_text(stmt, 4, line, strlen(line), NULL);
     sqlite3_step(stmt);
     pthread_mutex_unlock(&db_mutex_a);
+}
+
+void forAllMessagesPerUser(int uid, void (*action)(int sent, const char *sender, const char *recipient, const char *line)) {
+    pthread_mutex_lock(&db_mutex_s);
+    sqlite3_stmt *stmt;
+    sqlite3_prepare_v2(db, "SELECT sent,u1.login AS sender,u2.login AS recipient,line "
+                           "FROM messages "
+                           "LEFT JOIN users u1 ON sender=u1.id "
+                           "LEFT JOIN users u2 ON recipient=u2.id " 
+                           "WHERE sender=? OR recipient=? "
+                           "ORDER BY sent DESC", -1, &stmt, NULL);
+    sqlite3_bind_int(stmt, 1, uid);
+    sqlite3_bind_int(stmt, 2, uid);
+    static char line[1024], sender[1024], recipient[1024];
+    while(sqlite3_step(stmt) == SQLITE_ROW) {
+        int sent = sqlite3_column_int(stmt, 0);
+        strncpy(sender, sqlite3_column_text(stmt, 1), sizeof(sender));
+        strncpy(recipient, sqlite3_column_text(stmt, 2), sizeof(recipient));
+        strncpy(line, sqlite3_column_text(stmt, 3), sizeof(line));
+        action(sent, sender, recipient, line);
+    }
+    pthread_mutex_unlock(&db_mutex_s);
 }

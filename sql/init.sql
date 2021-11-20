@@ -6,4 +6,4 @@ insert into users (login,password) values ('bozena','bozena');
 insert into users (login,password) values ('celina','celina');
 
 drop table if exists messages;
-create table messages (id integer primary key autoincrement, date integer, sender integer, recipient integer, data text);
+create table messages (id integer primary key autoincrement, sent integer, sender integer, recipient integer, line text);
