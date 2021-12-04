@@ -29,7 +29,7 @@ void *tcpserver(void *arg) {
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     if(bind(sock, (struct sockaddr *) &addr, sizeof(addr))) {
-        LOG("Bind to port %hd failed", port);
+        LOG("Bind to port %hd/tcp failed", port);
         fprintf(stderr, "\nCannot start, check log\n");
         exit(2);
     }
@@ -46,6 +46,32 @@ void *tcpserver(void *arg) {
         } else {
             LOG("Error on accepting new connection", port);
             free(arg);
+        }
+    }
+}
+
+// kod serwera nasłuchowego UDP
+void *udpserver(void *arg) {
+    int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    if(bind(sock, (struct sockaddr *) &addr, sizeof(addr))) {
+        LOG("Bind to port %hd/udp failed", port);
+        fprintf(stderr, "\nCannot start, check log\n");
+        exit(2);
+    }
+    for(;;) {
+        struct sockaddr_in clientaddr;
+        unsigned int sockaddr_size = sizeof(clientaddr);
+        char buf[65536];
+        int n = recvfrom(sock, buf, sizeof(buf), 0, (struct sockaddr *) &clientaddr, &sockaddr_size);
+        if(n > 0) {
+            buf[n] = 0;
+            uint8_t *ip = (uint8_t *) &clientaddr.sin_addr;
+            LOG("UDP packet (%d bytes) from %d.%d.%d.%d\t%s", n, ip[0], ip[1], ip[2], ip[3], buf);
+            sendto(sock, buf, n, MSG_DONTWAIT, (struct sockaddr *) &clientaddr, sockaddr_size);
         }
     }
 }
@@ -69,7 +95,7 @@ int main(int argc, char* argv[]) {
 
     // podłączenie bazy danych
     if(!dbconnect()) {
-        fprintf(stderr, "connection to database failed, cannot continue\n", argv[0]);
+        fprintf(stderr, "connection to database failed, cannot continue\n");
         return 1;
     }
 
@@ -78,13 +104,17 @@ int main(int argc, char* argv[]) {
     pthread_create(&nstid, NULL, tcpserver, NULL);
     LOG("TCP server started on port %d", port);
 
+    // start wątku serwera nasłuchowego UDP
+    pthread_create(&nstid, NULL, udpserver, NULL);
+    LOG("UDP server started on port %d", port);
+
     // konsola sterowania serwerem
     for(;;) {
         char cmdline[1024], cmd[1024];
         int n, arg1;
         printf("%% "); fflush(stdout);
         if(!fgets(cmdline, sizeof(cmdline), stdin)) break;
-        n = sscanf(cmdline, "%s %d", cmd, arg1);
+        n = sscanf(cmdline, "%s %d", cmd, &arg1);
         if(n < 1) continue;
         if(!strcmp(cmd, "exit")) {
             break;
