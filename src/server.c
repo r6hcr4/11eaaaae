@@ -71,7 +71,7 @@ void *udpserver(void *arg) {
             buf[n] = 0;
             uint8_t *ip = (uint8_t *) &clientaddr.sin_addr;
             LOG("UDP packet (%d bytes) from %d.%d.%d.%d\t%s", n, ip[0], ip[1], ip[2], ip[3], buf);
-            sendto(sock, buf, n, MSG_DONTWAIT, (struct sockaddr *) &clientaddr, sockaddr_size);
+            // sendto(sock, buf, n, MSG_DONTWAIT, (struct sockaddr *) &clientaddr, sockaddr_size);
         }
     }
 }

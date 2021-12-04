@@ -249,7 +249,8 @@ public class UI extends JFrame implements ActionListener, KeyListener, WindowLis
                         DatagramSocket socket = new DatagramSocket();
                         DatagramPacket packet = new DatagramPacket(buf, buf.length, mainWindow.addr, mainWindow.port);
                         socket.send(packet);
-                        Thread.sleep(5000);
+                        socket.setSoTimeout(5000);
+                        socket.receive(buf, buf.length);
                     } catch(Exception ex) {}
                 }
             }
