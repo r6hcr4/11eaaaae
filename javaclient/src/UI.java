@@ -34,6 +34,8 @@ import java.net.DatagramPacket;
 
 public class UI extends JFrame implements ActionListener, KeyListener, WindowListener, Runnable {
 
+    public static String uuid = null;
+
     private InetAddress addr;
     private int port;
     private String connectTo = null;
@@ -225,7 +227,6 @@ public class UI extends JFrame implements ActionListener, KeyListener, WindowLis
     public static void main(String[] args) {
 
         UI mainWindow = new UI("Communicator client");
-
         try {
             String propFileName = (args.length > 0 ? args[0] : "client") + ".properties";
             Properties props = new Properties();
@@ -234,6 +235,8 @@ public class UI extends JFrame implements ActionListener, KeyListener, WindowLis
             mainWindow.port = Integer.parseInt(props.getProperty("port"));
             mainWindow.connectTo = mainWindow.addr.getHostAddress() + ":" + mainWindow.port;
             mainWindow.connect();
+            uuid = props.getProperty("uuid");
+            mainWindow.printlnToPanel(uuid);
         } catch (IOException e) {
             errorMessageBox("While connecting to " + mainWindow.connectTo + "\n" + e.getMessage());
             System.exit(1);
@@ -244,7 +247,7 @@ public class UI extends JFrame implements ActionListener, KeyListener, WindowLis
             public void run() {
                 // klient UDP
                 for(;;) {
-                    byte[] buf = "ACK".getBytes();
+                    byte[] buf = UI.uuid.getBytes();
                     try {
                         DatagramSocket socket = new DatagramSocket();
                         DatagramPacket packet = new DatagramPacket(buf, buf.length, mainWindow.addr, mainWindow.port);
