@@ -29,6 +29,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import java.net.DatagramSocket;
+import java.net.DatagramPacket;
 
 public class UI extends JFrame implements ActionListener, KeyListener, WindowListener, Runnable {
 
@@ -238,6 +240,20 @@ public class UI extends JFrame implements ActionListener, KeyListener, WindowLis
         }
 
         new Thread(mainWindow).start();
+        new Thread(new Runnable() {
+            public void run() {
+                // klient UDP
+                for(;;) {
+                    byte[] buf = "ACK".getBytes();
+                    try {
+                        DatagramSocket socket = new DatagramSocket();
+                        DatagramPacket packet = new DatagramPacket(buf, buf.length, mainWindow.addr, mainWindow.port);
+                        socket.send(packet);
+                        Thread.sleep(5000);
+                    } catch(Exception ex) {}
+                }
+            }
+        }).start();
         mainWindow.setVisible(true);
     }
 }
