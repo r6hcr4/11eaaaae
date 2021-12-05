@@ -55,7 +55,16 @@ void *cthread(void *arg) {
         if(!sendTo) {
             // tryb komend
             int narg = sscanf(line, "%s %s %s", cmd, arg1, arg2);
-            if(!strcmp(cmd, "login")) {
+            if(!strcmp(cmd, "device")) {
+                // rejestracja urządzenia
+                if(!carg->device_id && narg > 1) {
+                    carg->device_id = strdup(arg1);
+                    LOG("Connection %d: device %s has been registered", carg->sock, arg1);
+                } else {
+                    LOG("Connection %d: device cannot be registered", carg->sock);
+                    client_printf(0, output, "Device cannot be registered\r\n");
+                }
+            } else if(!strcmp(cmd, "login")) {
                 // logowanie
                 if(narg > 2) {
                     // użytkownik podał login i hasło
@@ -139,6 +148,7 @@ void *cthread(void *arg) {
 
     logout(carg, output);
     close(carg->sock);
+    if(carg->device_id) free(carg->device_id);
     LOG("Connection %d closed", carg->sock);
     clients[carg->sock] = NULL;
     free(carg);

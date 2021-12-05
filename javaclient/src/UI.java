@@ -31,6 +31,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
+import java.net.SocketTimeoutException;
 
 public class UI extends JFrame implements ActionListener, KeyListener, WindowListener, Runnable {
 
@@ -214,6 +215,8 @@ public class UI extends JFrame implements ActionListener, KeyListener, WindowLis
         out = new PrintWriter(sock.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
         setTitle("Connected to " + connectTo);
+        // automatical sending a device command
+        out.println("device " + UI.uuid);
     }
 
     private static void infoMessageBox(String msg) {
@@ -234,9 +237,8 @@ public class UI extends JFrame implements ActionListener, KeyListener, WindowLis
             mainWindow.addr = InetAddress.getByName(props.getProperty("host"));
             mainWindow.port = Integer.parseInt(props.getProperty("port"));
             mainWindow.connectTo = mainWindow.addr.getHostAddress() + ":" + mainWindow.port;
-            mainWindow.connect();
             uuid = props.getProperty("uuid");
-            mainWindow.printlnToPanel(uuid);
+            mainWindow.connect();
         } catch (IOException e) {
             errorMessageBox("While connecting to " + mainWindow.connectTo + "\n" + e.getMessage());
             System.exit(1);
@@ -247,13 +249,21 @@ public class UI extends JFrame implements ActionListener, KeyListener, WindowLis
             public void run() {
                 // klient UDP
                 for(;;) {
-                    byte[] buf = UI.uuid.getBytes();
+                    byte[] ackBuffer = UI.uuid.getBytes();
                     try {
                         DatagramSocket socket = new DatagramSocket();
-                        DatagramPacket packet = new DatagramPacket(buf, buf.length, mainWindow.addr, mainWindow.port);
-                        socket.send(packet);
+                        DatagramPacket ackPacket = new DatagramPacket(ackBuffer, ackBuffer.length, mainWindow.addr, mainWindow.port);
+                        socket.send(ackPacket);
                         socket.setSoTimeout(5000);
-                        socket.receive(packet);
+                        try {
+                            byte[] responseBuffer = new byte[65536];
+                            DatagramPacket responsePacket = new DatagramPacket(responseBuffer, responseBuffer.length);
+                            socket.receive(responsePacket);
+                            // response received
+                            String response = new String(responsePacket.getData(), 0, responsePacket.getLength());
+                        } catch(SocketTimeoutException ex) {
+                            // no response from server
+                        }
                     } catch(Exception ex) {}
                 }
             }

@@ -5,6 +5,7 @@ struct cthread_arg {
     struct in_addr sin_addr;
     int sock;
     int user;
+    char *device_id;
 };
 
 void *cthread(void *arg);
