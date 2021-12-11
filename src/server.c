@@ -124,13 +124,13 @@ int main(int argc, char* argv[]) {
             printf("working threads %d\n", nthreads);
         } else if(!strcmp(cmd, "list")) {
             int i;
-            printf("desc\tip\t\tlogin\tdevice_id\n");
+            printf("desc\tip\t\tlogin                   device_id\n");
             for(i = 0; i < MAXCLIENTS; i++) {
                 if(clients[i]) {
                     uint8_t *ip = (uint8_t *) &clients[i]->sin_addr;
                     char login[1024];
                     getLogin(clients[i]->user, login, sizeof(login));
-                    printf("%d\t%d.%d.%d.%d\t%s\t%s\n", clients[i]->sock, ip[0], ip[1], ip[2], ip[3], login, clients[i]->device_id);
+                    printf("%d\t%d.%d.%d.%d\t%-16s\t%s\n", clients[i]->sock, ip[0], ip[1], ip[2], ip[3], login, clients[i]->device_id);
                 }
             }
         } else if(!strcmp(cmd, "users")) {
