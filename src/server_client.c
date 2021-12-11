@@ -13,6 +13,7 @@
 static pthread_mutex_t out_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void client_printf(int sender, FILE *output, char *format, ...) {
+    if(!output) return;
     pthread_mutex_lock(&out_mutex);
     if(sender) {
         char login[1024];
@@ -51,7 +52,10 @@ void *cthread(void *arg) {
     char line[1024], cmd[1024], arg1[1024], arg2[1024];
     int sendTo = 0;
     for(;;) {
-        if(!fgets(line, sizeof(line), input)) break;
+        if(!fgets(line, sizeof(line), input)) {
+            input = output = NULL;
+            break;
+        }
         if(!sendTo) {
             // tryb komend
             int narg = sscanf(line, "%s %s %s", cmd, arg1, arg2);
