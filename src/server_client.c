@@ -94,7 +94,7 @@ void *cthread(void *arg) {
                         client_printf(0, output, "%s%s\n", login, i == carg->sock ? " (me)" : "");
                     }
                 }
-            } else if(!strcmp(cmd, "send")) {
+            } else if(!strcmp(cmd, "send") && carg->user) { // tylko zalogowani
                 // wysyłanie wiadomości
                 if(narg > 1) {
                     sendTo = getUser(arg1);
@@ -105,6 +105,19 @@ void *cthread(void *arg) {
                     }
                 } else {
                     client_printf(0, output, "Use: send <recipient>\r\n");
+                }
+            } else if(!strcmp(cmd, "friend") && carg->user) { // tylko zalogowani
+                // dodanie znajomości
+                if(narg > 1) {
+                    int friend = getUser(arg1);
+                    if(friend) {
+                        addFriendship(carg->user, friend);
+                        client_printf(0, output, "Added %s as a friend\r\n", arg1);
+                    } else {
+                        client_printf(0, output, "No such user %s\r\n", arg1);
+                    }
+                } else {
+                    client_printf(0, output, "Use: friend <user>\r\n");
                 }
             } else if(!strcmp(cmd, "register")) {
                 // rejestracja
@@ -122,7 +135,7 @@ void *cthread(void *arg) {
                     client_printf(0, output, "Use: register <user> <pass>\r\n");
                 }
             } else {
-                client_printf(0, output, "Unrecognized command %s\r\n", cmd);
+                client_printf(0, output, "Command %s cannot be performed\r\n", cmd);
             }
         } else {
             // tryb wiadomości

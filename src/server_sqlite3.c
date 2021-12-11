@@ -124,3 +124,14 @@ void saveMessage(int sender, int recipient, const char *line) {
     sqlite3_step(stmt);
     pthread_mutex_unlock(&db_mutex_a);
 }
+
+// dodaj znajomość
+void addFriendship(int uid, int friend) {
+    pthread_mutex_lock(&db_mutex_a);
+    sqlite3_stmt *stmt;
+    sqlite3_prepare_v2(db, "INSERT INTO friendship (uid, friend) VALUES (?, ?)", -1, &stmt, NULL);
+    sqlite3_bind_int(stmt, 1, uid);
+    sqlite3_bind_int(stmt, 2, friend);
+    sqlite3_step(stmt);
+    pthread_mutex_unlock(&db_mutex_a);
+}
